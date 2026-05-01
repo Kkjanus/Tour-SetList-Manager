@@ -1,11 +1,13 @@
-/** 
+/**
+ * Manages tour stops, cancellations, and the display of scheduled events.
+ * <p>
+ * This class allows adding stops to tour cities, cancelling stops with a message,
+ * removing stops by date, and printing the current tour itinerary.
+ *
  * @author Kalaesia Janus
  * @version 1.0
- * @created 4/20/2026
- * This class manages the tour stops and their dates, whether that is adding them or removing them as well as displaying them
- * to the users. It will also have details pertaining to the tour stops taken. 
- * 
-*/
+ * @since 2026-04-20
+ */
 package org.csu.cpsc;
 
 import java.util.Map;
@@ -16,8 +18,9 @@ import java.util.Calendar;
 
 public class TourStopManagement {
 
-    //Represents a single tour stop with its details and cancellation status.
-
+    /**
+     * Represents a single tour stop with its scheduled date, venue, and cancellation state.
+     */
     public static class TourStop {
         private String city;
         private Calendar date;
@@ -27,14 +30,22 @@ public class TourStopManagement {
         private boolean isCancelled;
         private String cancellationMessage;
 
+        /**
+         * Constructs a new tour stop.
+         *
+         * @param city        the city where the stop will take place
+         * @param date        the scheduled date and time of the stop
+         * @param venue       the venue name for the stop
+         * @param eventHour   the hour of the event in 24-hour format
+         * @param eventMinute the minute of the event
+         */
         public TourStop(String city, Calendar date, String venue, int eventHour, int eventMinute) {
             this.city = city;
             this.date = date;
             this.venue = venue;
             this.eventHour = eventHour;
             this.eventMinute = eventMinute;
-            this.isCancelled = false;
-            this.cancellationMessage = "";
+            restoreStop();
         }
 
         public String getCity() {
@@ -65,11 +76,19 @@ public class TourStopManagement {
             return cancellationMessage;
         }
 
+        /**
+         * Marks this stop as cancelled and records the provided message.
+         *
+         * @param message the cancellation explanation
+         */
         public void cancelStop(String message) {
             this.isCancelled = true;
             this.cancellationMessage = message;
         }
 
+        /**
+         * Restores this stop to an active scheduled state.
+         */
         public void restoreStop() {
             this.isCancelled = false;
             this.cancellationMessage = "";
@@ -101,11 +120,19 @@ public class TourStopManagement {
     private Map<String, List<TourStop>> tourStops;
     private Map<String, String> cancellationMessages;
 
+    /**
+     * Constructs a new TourStopManagement instance.
+     */
     public TourStopManagement() {
         tourStops = new HashMap<>();
         cancellationMessages = new HashMap<>();
     }
 
+    /**
+     * Adds a city to the tour stop lookup map.
+     *
+     * @param city the city to add
+     */
     public void addCity(String city){
         if (!tourStops.containsKey(city)) {
             tourStops.put(city, new ArrayList<>());
@@ -114,6 +141,13 @@ public class TourStopManagement {
         }
     }
 
+    /**
+     * Adds a tour stop for the specified city.
+     * <p>
+     * If a stop with the same city and date already exists, the stop is not added.
+     *
+     * @param stop the tour stop to add
+     */
     public void addStop(TourStop stop) {
         String city = stop.getCity();
         tourStops.putIfAbsent(city, new ArrayList<>());
@@ -127,6 +161,12 @@ public class TourStopManagement {
 
 
 
+    /**
+     * Removes a tour stop for the given city and date.
+     *
+     * @param city the city for the stop
+     * @param date the date of the stop to remove
+     */
     public void removeDate(String city, Calendar date){
         TourStop stop = getStop(city, date);
         if (stop != null) {
@@ -137,6 +177,13 @@ public class TourStopManagement {
         }
     }
 
+    /**
+     * Cancels a tour stop and records a cancellation message.
+     *
+     * @param city    the city for the stop
+     * @param date    the date of the stop to cancel
+     * @param message the cancellation message to associate with the stop
+     */
     public void cancelDate(String city, Calendar date, String message){
         TourStop stop = getStop(city, date);
         if (stop != null) {
@@ -148,14 +195,23 @@ public class TourStopManagement {
         }
     }
 
+    /**
+     * Returns whether the specified stop is cancelled.
+     *
+     * @param city the city for the stop
+     * @param date the date of the stop
+     */
     public boolean isCancelled(String city, Calendar date) {
         TourStop stop = getStop(city, date);
         return stop != null && stop.isCancelled();
     }
 
+    /**
+     * Prints all managed tour stops to standard output.
+     */
     public void displayTourStops() {
-        for (String city : tourStops.keySet()) {
-            for (TourStop stop : tourStops.get(city)) {
+        for (String city: tourStops.keySet()) {
+            for (TourStop stop: tourStops.get(city)) {
                 System.out.println(stop);
             }
         }
@@ -163,7 +219,7 @@ public class TourStopManagement {
 
         private TourStop getStop(String city, Calendar date) {
         if (tourStops.containsKey(city)) {
-            for (TourStop stop : tourStops.get(city)) {
+            for (TourStop stop: tourStops.get(city)) {
                 if (stop.getDate().get(Calendar.YEAR)         == date.get(Calendar.YEAR)
                  && stop.getDate().get(Calendar.MONTH)        == date.get(Calendar.MONTH)
                  && stop.getDate().get(Calendar.DAY_OF_MONTH) == date.get(Calendar.DAY_OF_MONTH)) {

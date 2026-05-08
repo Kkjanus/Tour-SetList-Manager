@@ -15,7 +15,6 @@ import java.util.ArrayList;
 public class FanVoting {
     private static Map<String, Integer> songVotes = new HashMap<>(); // Maps song titles to their vote counts (shared across fans)
     private Queue<String> fanVotesQueue; // Queue to track the order of songs this fan voted for
-    private List<String> votedSongs; // List to track the songs the fan has voted for
     private static List<String> fanNames = new ArrayList<>(); // List to track the names of fans who have voted (shared)
 
     private String fanName;
@@ -30,49 +29,68 @@ public class FanVoting {
         this.maxVotesPerFan = maxVotesPerFan;
         this.songPool = songPool;
         this.fanVotesQueue = new LinkedList<>();
-        this.votedSongs = new ArrayList<>();
     }
 
     /**
-     * Allows a fan to vote for a song. 
-     * Cannot vote if they have already submitted votes, cannot vote same song twice, and cannot exceed maxVotesPerFan.
+     * Stores voted songs for this fan in the queue and updates the global vote counts.
+     * Uses a compound key of title and artist to uniquely identify songs.
+     */
+    private String createSongKey(String title, String artist) {
+        return title + " | " + artist;
+    }
+
+    /**
+     * Allows a fan to cast a vote for a song.
+     * <p>
+     * Voting restrictions enforced:
+     * <ul>
+     *   <li>Fan cannot vote if they have already submitted votes</li>
+     *   <li>Fan cannot vote for the same song twice</li>
+     *   <li>Fan cannot exceed maxVotesPerFan votes</li>
+     *   <li>Song must exist in the song pool</li>
+     * </ul>
+     *
+     * @param songTitle the title of the song to vote for
+     * @param artist    the artist of the song to vote for
      */
     public void castVote(String songTitle, String artist) {
         if (fanNames.contains(fanName)) {
-            System.out.println(fanName + " has already voted.");
+            System.out.println(fanName + " has already submitted votes.");
             return;
         }
         if (songPool.getSong(songTitle, artist) == null) {
             System.out.println("Song not found in the pool.");
             return;
         }
-        if (votedSongs.contains(songTitle)) {
+        if (fanVotesQueue.contains(songTitle)) {
             System.out.println(fanName + " has already voted for this song.");
             return;
         }
-        if (votedSongs.size() >= maxVotesPerFan) {
+        if (fanVotesQueue.size() >= maxVotesPerFan) {
             System.out.println(fanName + " has reached the maximum number of votes.");
             return;
         }
 
         fanVotesQueue.add(songTitle);
-        votedSongs.add(songTitle);
 
-        Integer currentVotes = songVotes.get(songTitle);
+        String songKey = createSongKey(songTitle, artist);
+        Integer currentVotes = songVotes.get(songKey);
         if (currentVotes == null) {
-            songVotes.put(songTitle, 1);
+            songVotes.put(songKey, 1);
         } else {
-            songVotes.put(songTitle, currentVotes + 1);
+            songVotes.put(songKey, currentVotes + 1);
         }
 
         System.out.println(fanName + " voted for: " + songTitle);
     }
 
     /**
-     * Locks in votes so that the fan cannot vote again and is called when fan is done voting.
+     * Submits and locks in a fan's votes.
+     * <p>
+     * Once submitted, the fan cannot vote again. This method is called when a fan is done voting.
      */
     public void submitVotes() {
-        if (votedSongs.isEmpty()) {
+        if (fanVotesQueue.isEmpty()) {
             System.out.println(fanName + " has not voted for any songs.");
             return;
         }
@@ -85,7 +103,10 @@ public class FanVoting {
     }
 
     /**
-     * Checks if a fan has already voted.
+     * Checks if a fan has already submitted their votes.
+     *
+     * @param fanName the name of the fan to check
+     * @return {@code true} if the fan has submitted votes, {@code false} otherwise
      */
     public static boolean hasVoted(String fanName) {
         return fanNames.contains(fanName);
@@ -93,13 +114,16 @@ public class FanVoting {
 
     /**
      * Checks if this fan has already voted for a specific song.
+     *
+     * @param songTitle the title of the song to check
+     * @return {@code true} if the fan has voted for this song, {@code false} otherwise
      */
     public boolean hasVotedForSong(String songTitle) {
-        return votedSongs.contains(songTitle);
+        return fanVotesQueue.contains(songTitle);
     }
 
     /**
-     * Display the current vote counts for all songs.
+     * Displays the current vote counts for all songs in a formatted table.
      */
     public void displayVoteCounts() {
         System.out.println("=== Current Song Vote Counts ===");
@@ -109,32 +133,41 @@ public class FanVoting {
     }
 
     /**
-     * Returns the fan's name.
+     * Returns the name of this fan.
+     *
+     * @return the fan's name
      */
     public String getFanName() {
         return fanName;
     }
 
     /**
-     * Returns the full vote count map.
-     * Used by SetlistGeneration to sort songs by vote.
+     * Returns the full vote count map for all songs.
+     * <p>
+     * This map is shared across all fans and is used by SetlistGeneration to sort songs by vote count.
+     *
+     * @return a map of song titles to their respective vote counts
      */
     public static Map<String, Integer> getSongVotes() {
-        return songVotes;
+        return new HashMap<>(songVotes);
     }
 
     /**
-     * Returns how many votes this fan has cast.
+     * Returns the total number of votes this fan has cast.
+     *
+     * @return the number of votes cast by this fan
      */
     public int getTotalVotes() {
-        return votedSongs.size();
+        return fanVotesQueue.size();
     }
 
     /**
-     * Returns the list of songs this fan has voted for.
+     * Returns the list of songs this fan has voted for in the order they were voted.
+     *
+     * @return a list of song titles voted for by this fan
      */
     public List<String> getVotedSongs() {
-        return new LinkedList<>(fanVotesQueue);
+        return new ArrayList<>(fanVotesQueue);
     }
 
 }

@@ -5,6 +5,10 @@ import java.util.List;
 
 /**
  * Manages a pool of songs for the tour set list.
+ * <p>
+ * This class stores songs in a master pool, supports adding and removing songs,
+ * prevents duplicates by artist and title, and exposes the pool to other
+ * components such as setlist generation.
  */
 public class SongPoolManagement {
 
@@ -14,19 +18,16 @@ public class SongPoolManagement {
     public static class Song {
         private String artist;
         private String title;
-        private int duration;
 
         /**
          * Constructs a new Song.
          *
-         * @param artist   the song artist or performer
-         * @param title    the song title
-         * @param duration the song duration in seconds
+         * @param title  the song title
+         * @param artist the song artist or performer
          */
-        public Song(String artist, String title, int duration) {
-            this.artist = artist;
+        public Song(String title, String artist) {
             this.title = title;
-            this.duration = duration;
+            this.artist = artist;
         }
 
         /**
@@ -48,31 +49,20 @@ public class SongPoolManagement {
         }
 
         /**
-         * Returns the duration of the song.
+         * Returns a human-readable representation of the song.
          *
-         * @return the duration in seconds
+         * @return the song title
          */
-        public int getDuration() {
-            return duration;
-        }
-
-        /**
-         * Formatting the duration of songs to go from seconds to minutes and seconds.
-         * @return the formatted duration in minutes and seconds
-         */
-        public String getFormattedDuration() {
-            int minutes = duration / 60;
-            int seconds = duration % 60;
-            return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
-        }
-
         @Override
         public String toString() {
-            return title + " (" + getFormattedDuration() + ")";
+            return title + " by " + artist;
         }
 
     }
 
+    /**
+     * The live song pool used by the application.
+     */
     private List<Song> songPool;
 
     /**
@@ -84,7 +74,9 @@ public class SongPoolManagement {
 
     /**
      * Adds a song to the song pool.
-     * Prevents duplicate songs based on artist and title.
+     * <p>
+     * If the same artist/title combination already exists, the song is not added.
+     *
      * @param song the song to add
      */
     public void addSong(Song song) {
@@ -97,11 +89,12 @@ public class SongPoolManagement {
     }
 
     /**
-     * Removes a song from the song pool based on artist and title.
+     * Removes a song from the song pool by title and artist.
+     *
+     * @param title  the title of the song to remove
      * @param artist the artist of the song to remove
-     * @param title the title of the song to remove
      */
-    public void removeSong(String title, String artist){
+    public void removeSong(String title, String artist) {
         Song song = getSong(title, artist);
         if (song != null) {
             songPool.remove(song);
@@ -109,7 +102,6 @@ public class SongPoolManagement {
         } else {
             System.out.println("Song not found in the pool.");
         }
-
     }
 
     /**
@@ -121,15 +113,26 @@ public class SongPoolManagement {
             return;
         }
         System.out.println("=== Master Song Pool ===");
-        for( int i = 0; i < songPool.size(); i++) {
+        for (int i = 0; i < songPool.size(); i++) {
             System.out.println((i + 1) + ". " + songPool.get(i));
         }
     }
 
     /**
-     * Retrieves a song from the song pool based on artist and title.
-     * @param title the title of the song to retrieve
+     * Returns the full song pool list.
+     *
+     * @return the list of songs in the pool
+     */
+    public List<Song> getSongPool() {
+        return songPool;
+    }
+
+    /**
+     * Retrieves a song from the song pool based on title and artist.
+     *
+     * @param title  the title of the song to retrieve
      * @param artist the artist of the song to retrieve
+     * @return the matching song, or {@code null} if none is found
      */
     public Song getSong(String title, String artist) {
         for (Song song : songPool) {

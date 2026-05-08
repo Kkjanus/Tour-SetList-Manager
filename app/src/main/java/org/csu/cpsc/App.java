@@ -1,10 +1,7 @@
 package org.csu.cpsc;
 
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * Entry point for the Tour SetList Manager application.
@@ -30,110 +27,302 @@ public class App {
     public static void main(String[] args) {
         System.out.println(new App().getGreeting());
 
-        TourStopManagement manager = new TourStopManagement();
-
-        // Create dates
-        Calendar date1 = Calendar.getInstance();
-        date1.set(2026, Calendar.JULY, 4, 19, 30); // July 4, 2026 at 7:30 PM
-
-        Calendar date2 = Calendar.getInstance();
-        date2.set(2026, Calendar.AUGUST, 12, 20, 0); // August 12, 2026 at 8:00 PM
-
-        // Create stops
-        TourStopManagement.TourStop stop1 = new TourStopManagement.TourStop("Atlanta", date1, "State Farm Arena", 19, 30);
-        TourStopManagement.TourStop stop2 = new TourStopManagement.TourStop("Miami", date2, "Kaseya Center", 20, 0);
-
-        // Test addStop
-        System.out.println("--- Adding Stops ---");
-        manager.addStop(stop1);
-        manager.addStop(stop2);
-
-        // Test duplicate
-        System.out.println("\n--- Adding Duplicate ---");
-        manager.addStop(stop1);
-
-        // Test displayTourStops
-        System.out.println("\n--- All Tour Stops ---");
-        manager.displayTourStops();
-
-        // Test isCancelled before cancelling
-        System.out.println("\n--- Is Atlanta Cancelled? ---");
-        System.out.println(manager.isCancelled("Atlanta", date1));
-
-        // Test cancelDate
-        System.out.println("\n--- Cancelling Atlanta ---");
-        manager.cancelDate("Atlanta", date1, "Venue issues.");
-
-        // Test isCancelled after cancelling
-        System.out.println("\n--- Is Atlanta Cancelled? ---");
-        System.out.println(manager.isCancelled("Atlanta", date1));
-
-        // Test displayTourStops after cancel
-        System.out.println("\n--- All Tour Stops After Cancel ---");
-        manager.displayTourStops();
-
-        // Test removeDate
-        System.out.println("\n--- Removing Miami ---");
-        manager.removeDate("Miami", date2);
-
-        // Final display
-        System.out.println("\n--- Final Tour Stops ---");
-        manager.displayTourStops();
-
+        Scanner scanner = new Scanner(System.in);
+ 
         // -------------------------------------------------------
-        // SongPoolManagement Tests
+        // Setup: Song Pool
         // -------------------------------------------------------
         SongPoolManagement songPool = new SongPoolManagement();
+ 
+        // -------------------------------------------------------
+        // Setup: Tour Stops
+        // -------------------------------------------------------
+        TourStopManagement tourManager = new TourStopManagement();
+ 
+        // -------------------------------------------------------
+        // Setup: Setlist Generation
+        // -------------------------------------------------------
+        SetlistGeneration generator = new SetlistGeneration(3);
+ 
+        // -------------------------------------------------------
+        // Setup: Setlist Management (Artist Override)
+        // -------------------------------------------------------
+        SetlistManagement setlistMgmt = new SetlistManagement();
+ 
+        // -------------------------------------------------------
+        // Role Selection — runs the app
+        // -------------------------------------------------------
+        boolean running = true;
+ 
+        while (running) {
+            System.out.println("\n=== Welcome to StageVote ===");
+            System.out.println("Please select a role: fan or artist (or 'exit' to quit)");
+            String roleInput = scanner.nextLine().trim().toLowerCase();
+ 
+            if (roleInput.equals("exit")) {
+                System.out.println("Goodbye!");
+                running = false;
+ 
+            } else if (roleInput.equals("artist")) {
+                boolean artistRunning = true;
+                while (artistRunning) {
+                    System.out.println("\n=== Artist Menu ===");
+                    System.out.println("1. View Tour Stops");
+                    System.out.println("2. Add Tour Stop");
+                    System.out.println("3. Remove Tour Stop");
+                    System.out.println("4. Cancel Tour Stop");
+                    System.out.println("5. View Song Pool");
+                    System.out.println("6. Add Song to Pool");
+                    System.out.println("7. Remove Song from Pool");
+                    System.out.println("8. View Setlist");
+                    System.out.println("9. Add Song to Setlist");
+                    System.out.println("10. Remove Song from Setlist");
+                    System.out.println("11. Clear Setlist");
+                    System.out.println("12. Generate Setlist");
+                    System.out.println("13. Display Generated Setlist");
+                    System.out.println("14. Set Setlist Size");
+                    System.out.println("15. Back");
+                    System.out.print("Enter choice: ");
+ 
+                    String choice = scanner.nextLine().trim();
+ 
+                    if (choice.equals("1")) {
+                        tourManager.displayTourStops();
+ 
+                    } else if (choice.equals("2")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter venue: ");
+                        String venue = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter event hour (0-23): ");
+                        int hour = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter event minute (0-59): ");
+                        int minute = Integer.parseInt(scanner.nextLine().trim());
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
+                        tourManager.addStop(new TourStopManagement.TourStop(city, date, venue, hour, minute));
+ 
+                    } else if (choice.equals("3")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
+                        tourManager.removeDate(city, date);
+ 
+                    } else if (choice.equals("4")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter cancellation message: ");
+                        String message = scanner.nextLine().trim();
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
+                        tourManager.cancelDate(city, date, message);
+ 
+                    } else if (choice.equals("5")) {
+                        songPool.displaySongs();
+ 
+                    } else if (choice.equals("6")) {
+                        System.out.print("Enter song title: ");
+                        String title = scanner.nextLine().trim();
+                        System.out.print("Enter artist: ");
+                        String artist = scanner.nextLine().trim();
+                        songPool.addSong(new SongPoolManagement.Song(title, artist));
+ 
+                    } else if (choice.equals("7")) {
+                        System.out.print("Enter song title to remove: ");
+                        String title = scanner.nextLine().trim();
+                        System.out.print("Enter artist: ");
+                        String artist = scanner.nextLine().trim();
+                        songPool.removeSong(title, artist);
+ 
+                    } else if (choice.equals("8")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
+                        setlistMgmt.viewSetlist(city, date);
+ 
+                    } else if (choice.equals("9")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter song title: ");
+                        String title = scanner.nextLine().trim();
+                        System.out.print("Enter artist: ");
+                        String artist = scanner.nextLine().trim();
+                        SongPoolManagement.Song song = songPool.getSong(title, artist);
+                        if (song != null) {
+                            Calendar date = Calendar.getInstance();
+                            date.set(year, month, day);
+                            setlistMgmt.addSongToSetlist(city, date, song);
+                        } else {
+                            System.out.println("Song not found in pool.");
+                        }
+ 
+                    } else if (choice.equals("10")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
+                        setlistMgmt.removeSongFromSetlist(city, date);
+ 
+                    } else if (choice.equals("11")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
+                        setlistMgmt.clearSetlist(city, date);
+ 
+                    } else if (choice.equals("12")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
 
-        // Test addSongToPool
-        System.out.println("--- Adding Songs ---");
-        songPool.addSong(new SongPoolManagement.Song("Taylor Swift", "Love Story", 234));
-        songPool.addSong(new SongPoolManagement.Song("Taylor Swift", "Shake It Off", 219));
-        songPool.addSong(new SongPoolManagement.Song("Taylor Swift", "Blank Space", 231));
-
-        // Test duplicate
-        System.out.println("\n--- Reject Duplicate ---");
-        songPool.addSong(new SongPoolManagement.Song("Taylor Swift", "Love Story", 234));
-
-        // Test displaySongPool
-        System.out.println("\n--- Song Pool ---");
-        songPool.displaySongs();
-
-        // Test removeSongFromPool
-        System.out.println("\n--- Removing Shake It Off ---");
-        songPool.removeSong("Shake It Off", "Taylor Swift");
-
-        // Test remove song that doesn't exist
-        System.out.println("\n--- Removing Song That Doesn't Exist ---");
-        songPool.removeSong("Bad Blood", "Taylor Swift");
-
-        // Test displaySongPool after removal
-        System.out.println("\n--- Song Pool After Removal ---");
-        songPool.displaySongs();
-
-        // create the song pool and add songs
-        SongPoolManagement songPool1 = new SongPoolManagement();
-        songPool1.addSong(new SongPoolManagement.Song("Taylor Swift", "Love Story", 234));
-        songPool1.addSong(new SongPoolManagement.Song("Taylor Swift", "Shake It Off", 219));
-
-        // create a fan voting session
-        FanVoting fanVoting = new FanVoting("Alice", 3, songPool1);
-
-        // vote for songs
-        fanVoting.castVote("Love Story", "Taylor Swift");
-        fanVoting.castVote("Shake It Off", "Taylor Swift");
-
-        // try a duplicate vote
-        fanVoting.castVote("Love Story", "Taylor Swift");
-
-        // submit votes
-        fanVoting.submitVotes();
-
-        // print results
-        System.out.println("Voted songs: " + fanVoting.getVotedSongs());
-        fanVoting.displayVoteCounts();
-
-        // verify the fan is locked in
-        System.out.println("Has Alice voted? " + FanVoting.hasVoted("Alice"));
+                        if (tourManager.getTourStop(city, date) == null) {
+                            System.out.println("No tour stop found for " + city + " on that date.");
+                        } else {
+                            generator.loadVotes(songPool);
+                            generator.generateSetlist();
+                            for (SetlistGeneration.VotedSong vs : generator.getSetlist()) {
+                                setlistMgmt.addSongToSetlist(city, date, vs.getSong());
+                            }
+                            System.out.println("Setlist generated and saved for " + city + ".");
+                        }
+                    } else if (choice.equals("13")) {
+                        generator.displaySetlist();
+ 
+                    } else if (choice.equals("14")) {
+                        System.out.print("Enter new setlist size: ");
+                        int size = Integer.parseInt(scanner.nextLine().trim());
+                        generator.setSetlistSize(size);
+                        System.out.println("Setlist size set to " + size + ".");
+ 
+                    } else if (choice.equals("15")) {
+                        artistRunning = false;
+ 
+                    } else {
+                        System.out.println("Invalid choice. Please try again.");
+                    }
+                }
+ 
+            } else if (roleInput.equals("fan")) {
+                System.out.print("Enter your name: ");
+                String fanName = scanner.nextLine().trim();
+ 
+                // Create the fan's FanVoting instance once so votes persist across menu visits
+                FanVoting fan = new FanVoting(fanName, 5, songPool);
+ 
+                boolean fanRunning = true;
+                while (fanRunning) {
+                    System.out.println("\n=== Fan Menu ===");
+                    System.out.println("1. View Tour Stops");
+                    System.out.println("2. View Song Pool");
+                    System.out.println("3. Vote for a Song");
+                    System.out.println("4. Submit Votes");
+                    System.out.println("5. View Current Setlist");
+                    System.out.println("6. View Vote Counts");
+                    System.out.println("7. Back");
+                    System.out.print("Enter choice: ");
+ 
+                    String choice = scanner.nextLine().trim();
+ 
+                    if (choice.equals("1")) {
+                        tourManager.displayTourStops();
+ 
+                    } else if (choice.equals("2")) {
+                        songPool.displaySongs();
+ 
+                    } else if (choice.equals("3")) {
+                        if (FanVoting.hasVoted(fanName)) {
+                            System.out.println(fanName + " has already submitted votes and cannot vote again.");
+                        } else {
+                            System.out.print("Enter song title: ");
+                            String title = scanner.nextLine().trim();
+                            System.out.print("Enter artist: ");
+                            String artist = scanner.nextLine().trim();
+                            fan.castVote(title, artist);
+                        }
+ 
+                    } else if (choice.equals("4")) {
+                        fan.submitVotes();
+ 
+                    } else if (choice.equals("5")) {
+                        System.out.print("Enter city: ");
+                        String city = scanner.nextLine().trim();
+                        System.out.print("Enter year: ");
+                        int year = Integer.parseInt(scanner.nextLine().trim());
+                        System.out.print("Enter month (1-12): ");
+                        int month = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                        System.out.print("Enter day: ");
+                        int day = Integer.parseInt(scanner.nextLine().trim());
+                        Calendar date = Calendar.getInstance();
+                        date.set(year, month, day);
+                        setlistMgmt.viewSetlist(city, date);
+ 
+                    } else if (choice.equals("6")) {
+                        fan.displayVoteCounts();
+ 
+                    } else if (choice.equals("7")) {
+                        fanRunning = false;
+ 
+                    } else {
+                        System.out.println("Invalid choice. Please try again.");
+                    }
+                }
+ 
+            } else {
+                System.out.println("Invalid role. Please enter 'fan' or 'artist'.");
+            }
+        }
+ 
+        scanner.close();
     }
 }
